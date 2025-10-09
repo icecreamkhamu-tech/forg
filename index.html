@@ -1,61 +1,255 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Forget Password</title>
+<title>Messenger App</title>
 <style>
-body { font-family: Arial; background:#f4f4f4; display:flex; justify-content:center; align-items:center; height:100vh; }
-.container { background:white; padding:20px; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.2); width:300px; }
-h2 { text-align:center; }
-input { width:100%; padding:10px; margin:5px 0; border-radius:4px; border:1px solid #ccc; }
-button { width:100%; padding:10px; background:#f44336; color:white; border:none; border-radius:4px; cursor:pointer; }
-button:hover { background:#d32f2f; }
-.link { text-align:center; margin-top:10px; }
-.link a { color:#4CAF50; text-decoration:none; }
+body {font-family: Arial, sans-serif; background: #f0f2f5; margin: 0;}
+.container {width: 100%; max-width: 400px; margin: auto; padding: 20px;}
+.hidden {display: none;}
+.card {background: #fff; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); padding: 20px; margin-top: 40px;}
+input, button {width: 100%; padding: 10px; margin: 8px 0; border-radius: 5px; border: 1px solid #ccc;}
+button {background: #0084ff; color: #fff; border: none; cursor: pointer;}
+button:hover {background: #0073e6;}
+#searchBox {width: 100%; padding: 10px; border-radius: 30px; border: 1px solid #ccc; margin-bottom: 10px;}
+.user {background: #fff; border-radius: 8px; margin: 5px 0; padding: 10px; cursor: pointer; display: flex; justify-content: space-between;}
+.user:hover {background: #f0f0f0;}
+.user span {color: gray; font-size: 14px;}
+#chatArea {height: 350px; overflow-y: auto; background: #fff; border-radius: 10px; padding: 10px;}
+.message {padding: 8px; border-radius: 5px; margin: 5px; width: fit-content; max-width: 70%; word-wrap: break-word;}
+.sent {background: #DCF8C6; margin-left: auto;}
+.received {background: #eee; margin-right: auto;}
+#chatHeader {display: flex; align-items: center; justify-content: space-between; background: #0084ff; color: white; padding: 10px; border-radius: 10px 10px 0 0;}
+.backBtn {background: white; color: #0084ff; border: none; padding: 5px 10px; border-radius: 5px;}
+#messageInput {flex:2; padding:10px; font-size:16px; border-radius:8px;}
+#sendBtn {flex:0.5; padding:10px; font-size:14px;}
 </style>
 </head>
 <body>
-<div class="container">
-<h2>Forget Password</h2>
-<input type="email" id="email" placeholder="Enter Email">
-<button onclick="resetPassword()">Reset Password</button>
-<div class="link">
-<a href="https://icecreamkhamu-tech.github.io/logi/">Back to Login</a>
+
+<!-- Login Page -->
+<div id="loginPage" class="container card">
+  <h2>Login</h2>
+  <input id="loginEmail" type="email" placeholder="Email">
+  <input id="loginPass" type="password" placeholder="Password">
+  <button onclick="login()">Login</button>
+  <a href="#" onclick="showPage('signupPage')">Create Account</a><br>
+  <a href="#" onclick="showPage('forgotPage')">Forgot Password?</a>
 </div>
+
+<!-- Signup Page -->
+<div id="signupPage" class="container card hidden">
+  <h2>Sign Up</h2>
+  <input id="name" placeholder="Full Name">
+  <input id="email" type="email" placeholder="Email">
+  <input id="password" type="password" placeholder="Password">
+  <button onclick="signup()">Sign Up</button>
+  <a href="#" onclick="showPage('loginPage')">Back to Login</a>
+</div>
+
+<!-- Forgot Password -->
+<div id="forgotPage" class="container card hidden">
+  <h2>Reset Password</h2>
+  <input id="forgotEmail" type="email" placeholder="Enter Email">
+  <button onclick="resetPass()">Send Reset Link</button>
+  <a href="#" onclick="showPage('loginPage')">Back to Login</a>
+</div>
+
+<!-- Main Messenger Page -->
+<div id="mainPage" class="hidden container">
+  <h2>Messenger</h2>
+  <input type="text" id="searchBox" placeholder="Search user by name..." oninput="searchUsers()">
+  <div id="chatList"></div>
+  <div id="searchResults"></div>
+  <button onclick="logout()" style="background:#f44336;">Logout</button>
+</div>
+
+<!-- Chat Page -->
+<div id="chatPage" class="hidden container">
+  <div id="chatHeader">
+    <button class="backBtn" onclick="showPage('mainPage')">←</button>
+    <h3 id="chatWith"></h3>
+  </div>
+  <div id="chatArea"></div>
+
+  <!-- Typing Preview -->
+  <div id="typingPreview" style="font-size: 12px; color: gray; padding: 5px; height: 20px;"></div>
+
+  <div style="margin-top:10px; display:flex; gap:5px;">
+    <input id="messageInput" placeholder="Type message...">
+    <button id="sendBtn">Send</button>
+  </div>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-import { getAuth, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+import { getFirestore, setDoc, doc, collection, query, where, getDocs, addDoc, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
 const firebaseConfig = {
-    apiKey: "AIzaSyDA3y67A-d77q1zwh5_GHtYundQyudvbdc",
-    authDomain: "freefire-7f9b7.firebaseapp.com",
-    projectId: "freefire-7f9b7",
-    storageBucket: "freefire-7f9b7.appspot.com",
-    messagingSenderId: "69091172437",
-    appId: "1:69091172437:web:fd82e4ded5d5252bf4b4dc",
-    measurementId: "G-8T21K8TEN0"
+  apiKey: "AIzaSyDA3y67A-d77q1zwh5_GHtYundQyudvbdc",
+  authDomain: "freefire-7f9b7.firebaseapp.com",
+  projectId: "freefire-7f9b7",
+  storageBucket: "freefire-7f9b7.appspot.com",
+  messagingSenderId: "69091172437",
+  appId: "1:69091172437:web:fd82e4ded5d5252bf4b4dc"
 };
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
+const db = getFirestore(app);
 
-async function resetPassword(){
-    const email = document.getElementById("email").value;
-    if(!email){
-        alert("Please enter your email.");
-        return;
+let currentUser = null;
+let selectedUser = null;
+
+window.showPage = function(id){
+  document.querySelectorAll('.container').forEach(e=>e.classList.add('hidden'));
+  document.getElementById(id).classList.remove('hidden');
+};
+
+window.signup = async function(){
+  const name=document.getElementById("name").value;
+  const email=document.getElementById("email").value;
+  const password=document.getElementById("password").value;
+  try{
+    const res=await createUserWithEmailAndPassword(auth,email,password);
+    await setDoc(doc(db,"users",res.user.uid),{uid:res.user.uid,name,email});
+    alert("Account created!");
+    showPage("loginPage");
+  }catch(e){alert(e.message);}
+};
+
+window.login = async function(){
+  const email=document.getElementById("loginEmail").value;
+  const pass=document.getElementById("loginPass").value;
+  try{
+    await signInWithEmailAndPassword(auth,email,pass);
+    showPage("mainPage");
+    loadConversations();
+  }catch(e){alert(e.message);}
+};
+
+window.resetPass = async function(){
+  const email=document.getElementById("forgotEmail").value;
+  try{
+    await sendPasswordResetEmail(auth,email);
+    alert("Reset link sent!");
+  }catch(e){alert(e.message);}
+};
+
+window.logout = function(){ signOut(auth); };
+
+async function loadConversations(){
+  const chatList=document.getElementById("chatList");
+  chatList.innerHTML="<b>Loading chats...</b>";
+
+  const chatsRef=collection(db,"chats");
+  const snapshot=await getDocs(chatsRef);
+  const chatData=[];
+
+  snapshot.forEach(docSnap=>{
+    const chatId=docSnap.id;
+    if(chatId.includes(currentUser.uid)){
+      const msgRef=collection(db,"chats",chatId,"messages");
+      const q=query(msgRef,orderBy("timestamp","desc"));
+      onSnapshot(q,(snap)=>{
+        if(!snap.empty){
+          const lastMsg=snap.docs[0].data();
+          const otherId=chatId.replace(currentUser.uid,"").replace("_","");
+          chatData.push({chatId,lastMsg,otherId});
+          renderChats(chatData);
+        }
+      });
     }
-    try{
-        await sendPasswordResetEmail(auth, email);
-        alert("Reset email sent successfully.");
-        window.location.href = "login.html";
-    } catch(error){
-        alert(error.message);
-    }
+  });
 }
+
+async function renderChats(chatData){
+  const chatList=document.getElementById("chatList");
+  chatList.innerHTML="";
+  for(let c of chatData){
+    const userDoc=await getDocs(query(collection(db,"users"),where("uid","==",c.otherId)));
+    userDoc.forEach(d=>{
+      const u=d.data();
+      const div=document.createElement("div");
+      div.className="user";
+      div.innerHTML=`<b>${u.name}</b><span>${c.lastMsg.message||""}</span>`;
+      div.onclick=()=>openChat(u);
+      chatList.appendChild(div);
+    });
+  }
+}
+
+window.searchUsers = async function(){
+  const term=document.getElementById("searchBox").value.toLowerCase();
+  const searchDiv=document.getElementById("searchResults");
+  searchDiv.innerHTML="";
+
+  if(!term)return;
+
+  const q=query(collection(db,"users"));
+  const snapshot=await getDocs(q);
+  snapshot.forEach(docSnap=>{
+    const u=docSnap.data();
+    if(u.uid!==currentUser.uid && u.name.toLowerCase().includes(term)){
+      const div=document.createElement("div");
+      div.className="user";
+      div.innerHTML=`<b>${u.name}</b>`;
+      div.onclick=()=>openChat(u);
+      searchDiv.appendChild(div);
+    }
+  });
+};
+
+window.openChat=function(u){
+  selectedUser=u;
+  showPage("chatPage");
+  document.getElementById("chatWith").textContent=u.name;
+  loadMessages(u);
+};
+
+function loadMessages(u){
+  const area=document.getElementById("chatArea");
+  const chatId=currentUser.uid<u.uid?currentUser.uid+"_"+u.uid:u.uid+"_"+currentUser.uid;
+  const msgRef=collection(db,"chats",chatId,"messages");
+  const q=query(msgRef,orderBy("timestamp"));
+  onSnapshot(q,(snap)=>{
+    area.innerHTML="";
+    snap.forEach(d=>{
+      const m=d.data();
+      const div=document.createElement("div");
+      div.className="message "+(m.senderId===currentUser.uid?"sent":"received");
+      div.textContent=m.message;
+      area.appendChild(div);
+    });
+    area.scrollTop=area.scrollHeight;
+  });
+}
+
+window.sendMessage = async function(){
+  const input=document.getElementById("messageInput");
+  if(!selectedUser||!input.value.trim())return;
+  const chatId=currentUser.uid<selectedUser.uid?currentUser.uid+"_"+selectedUser.uid:selectedUser.uid+"_"+currentUser.uid;
+  await addDoc(collection(db,"chats",chatId,"messages"),{
+    senderId:currentUser.uid,
+    message:input.value,
+    timestamp:serverTimestamp()
+  });
+  input.value="";
+  document.getElementById("typingPreview").textContent = "";
+};
+
+document.addEventListener("DOMContentLoaded", function(){
+  const messageInput = document.getElementById("messageInput");
+  const typingPreview = document.getElementById("typingPreview");
+
+  messageInput.addEventListener("input", function(){
+    typingPreview.textContent = "Typing: " + messageInput.value;
+  });
+
+  document.getElementById("sendBtn").addEventListener("click", sendMessage);
+});
 </script>
 </body>
 </html>
