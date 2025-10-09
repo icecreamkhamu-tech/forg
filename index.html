@@ -5,87 +5,78 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Messenger App</title>
 <style>
-body {font-family: Arial, sans-serif; background: #f0f2f5; margin: 0;}
-.container {width: 100%; max-width: 400px; margin: auto; padding: 20px;}
-.hidden {display: none;}
-.card {background: #fff; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); padding: 20px; margin-top: 40px;}
-input, button {width: 100%; padding: 10px; margin: 8px 0; border-radius: 5px; border: 1px solid #ccc;}
-button {background: #0084ff; color: #fff; border: none; cursor: pointer;}
-button:hover {background: #0073e6;}
-#searchBox {width: 100%; padding: 10px; border-radius: 30px; border: 1px solid #ccc; margin-bottom: 10px;}
-.user {background: #fff; border-radius: 8px; margin: 5px 0; padding: 10px; cursor: pointer; display: flex; justify-content: space-between;}
-.user:hover {background: #f0f0f0;}
-.user span {color: gray; font-size: 14px;}
-#chatArea {height: 350px; overflow-y: auto; background: #fff; border-radius: 10px; padding: 10px;}
-.message {padding: 8px; border-radius: 5px; margin: 5px; width: fit-content; max-width: 70%; word-wrap: break-word;}
-.sent {background: #DCF8C6; margin-left: auto;}
-.received {background: #eee; margin-right: auto;}
-#chatHeader {display: flex; align-items: center; justify-content: space-between; background: #0084ff; color: white; padding: 10px; border-radius: 10px 10px 0 0;}
-.backBtn {background: white; color: #0084ff; border: none; padding: 5px 10px; border-radius: 5px;}
-#messageInput {flex:2; padding:10px; font-size:16px; border-radius:8px;}
-#sendBtn {flex:0.5; padding:10px; font-size:14px;}
+body{font-family:Arial;background:#f0f0f0;margin:0;padding:0;text-align:center}
+.container{background:#fff;margin:30px auto;padding:20px;border-radius:10px;box-shadow:0 0 10px rgba(0,0,0,0.1);width:90%;max-width:400px}
+input,button{width:90%;padding:10px;margin:8px 0;border-radius:5px;border:1px solid #ccc}
+button{background:#4CAF50;color:#fff;border:none;cursor:pointer}
+.hidden{display:none}
+.user{padding:10px;margin:5px;background:#fff;border-radius:5px;cursor:pointer}
+.user:hover{background:#eee}
+.message{padding:8px;border-radius:5px;margin:5px;width:fit-content;max-width:70%}
+.sent{background:#DCF8C6;margin-left:auto}
+.received{background:#eee;margin-right:auto}
+#chatArea{height:300px;overflow-y:auto;background:#fff;padding:10px;margin-top:10px;border-radius:8px}
+#suggestions{background:#fff;max-height:200px;overflow-y:auto;}
+.suggestionItem{padding:8px;border-bottom:1px solid #ddd;cursor:pointer;}
+.suggestionItem:hover{background:#eee;}
+.conversationItem{padding:10px;border-bottom:1px solid #ddd;cursor:pointer;}
+.conversationItem:hover{background:#eee;}
 </style>
 </head>
 <body>
 
-<!-- Login Page -->
-<div id="loginPage" class="container card">
+<!-- LOGIN -->
+<div id="loginPage" class="container">
   <h2>Login</h2>
   <input id="loginEmail" type="email" placeholder="Email">
   <input id="loginPass" type="password" placeholder="Password">
   <button onclick="login()">Login</button>
-  <a href="#" onclick="showPage('signupPage')">Create Account</a><br>
   <a href="#" onclick="showPage('forgotPage')">Forgot Password?</a>
+  <a href="#" onclick="showPage('signupPage')">Create Account</a>
 </div>
 
-<!-- Signup Page -->
-<div id="signupPage" class="container card hidden">
+<!-- SIGNUP -->
+<div id="signupPage" class="container hidden">
   <h2>Sign Up</h2>
   <input id="name" placeholder="Full Name">
+  <input id="mobile" placeholder="Mobile Number">
   <input id="email" type="email" placeholder="Email">
   <input id="password" type="password" placeholder="Password">
+  <input id="dob" type="date">
   <button onclick="signup()">Sign Up</button>
   <a href="#" onclick="showPage('loginPage')">Back to Login</a>
 </div>
 
-<!-- Forgot Password -->
-<div id="forgotPage" class="container card hidden">
+<!-- FORGOT PASSWORD -->
+<div id="forgotPage" class="container hidden">
   <h2>Reset Password</h2>
   <input id="forgotEmail" type="email" placeholder="Enter Email">
   <button onclick="resetPass()">Send Reset Link</button>
   <a href="#" onclick="showPage('loginPage')">Back to Login</a>
 </div>
 
-<!-- Main Messenger Page -->
-<div id="mainPage" class="hidden container">
+<!-- MAIN PAGE -->
+<div id="mainPage" class="container hidden">
   <h2>Messenger</h2>
-  <input type="text" id="searchBox" placeholder="Search user by name..." oninput="searchUsers()">
-  <div id="chatList"></div>
-  <div id="searchResults"></div>
-  <button onclick="logout()" style="background:#f44336;">Logout</button>
+  <input type="text" id="searchBox" placeholder="Search user..." oninput="suggestUsers()" onkeydown="handleEnter(event)">
+  <div id="suggestions"></div>
+  <h3>Conversations</h3>
+  <div id="conversationList"></div>
 </div>
 
-<!-- Chat Page -->
-<div id="chatPage" class="hidden container">
-  <div id="chatHeader">
-    <button class="backBtn" onclick="showPage('mainPage')">←</button>
-    <h3 id="chatWith"></h3>
-  </div>
+<!-- CHAT PAGE -->
+<div id="chatPage" class="container hidden">
+  <button onclick="backToMain()">⬅ Back</button>
+  <h3 id="chatWith"></h3>
   <div id="chatArea"></div>
-
-  <!-- Typing Preview -->
-  <div id="typingPreview" style="font-size: 12px; color: gray; padding: 5px; height: 20px;"></div>
-
-  <div style="margin-top:10px; display:flex; gap:5px;">
-    <input id="messageInput" placeholder="Type message...">
-    <button id="sendBtn">Send</button>
-  </div>
+  <input id="messageInput" placeholder="Type message...">
+  <button onclick="sendMessage()">Send</button>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendPasswordResetEmail, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-import { getFirestore, setDoc, doc, collection, query, where, getDocs, addDoc, orderBy, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+import { getFirestore, setDoc, doc, collection, query, getDocs, addDoc, orderBy, onSnapshot, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDA3y67A-d77q1zwh5_GHtYundQyudvbdc",
@@ -103,34 +94,42 @@ const db = getFirestore(app);
 let currentUser = null;
 let selectedUser = null;
 
-window.showPage = function(id){
+window.showPage = (id) => {
   document.querySelectorAll('.container').forEach(e=>e.classList.add('hidden'));
   document.getElementById(id).classList.remove('hidden');
 };
 
-window.signup = async function(){
-  const name=document.getElementById("name").value;
-  const email=document.getElementById("email").value;
-  const password=document.getElementById("password").value;
+onAuthStateChanged(auth, (user)=>{
+  if(user){
+    currentUser = user;
+    showPage('mainPage');
+    loadConversations();
+  }else{
+    showPage('loginPage');
+  }
+});
+
+window.signup = async ()=>{
+  const name = nameEl.value, mobile = mobileEl.value, email = emailEl.value, pass = passwordEl.value, dob = dobEl.value;
   try{
-    const res=await createUserWithEmailAndPassword(auth,email,password);
-    await setDoc(doc(db,"users",res.user.uid),{uid:res.user.uid,name,email});
+    const res = await createUserWithEmailAndPassword(auth,email,pass);
+    await setDoc(doc(db,"users",res.user.uid),{uid:res.user.uid,name,mobile,email,dob});
     alert("Account created!");
-    showPage("loginPage");
+    showPage('loginPage');
   }catch(e){alert(e.message);}
 };
+const nameEl=document.getElementById("name"),mobileEl=document.getElementById("mobile"),emailEl=document.getElementById("email"),passwordEl=document.getElementById("password"),dobEl=document.getElementById("dob");
 
-window.login = async function(){
-  const email=document.getElementById("loginEmail").value;
-  const pass=document.getElementById("loginPass").value;
+window.login = async ()=>{
+  const email=document.getElementById("loginEmail").value,pass=document.getElementById("loginPass").value;
   try{
     await signInWithEmailAndPassword(auth,email,pass);
-    showPage("mainPage");
+    showPage('mainPage');
     loadConversations();
   }catch(e){alert(e.message);}
 };
 
-window.resetPass = async function(){
+window.resetPass = async ()=>{
   const email=document.getElementById("forgotEmail").value;
   try{
     await sendPasswordResetEmail(auth,email);
@@ -138,98 +137,93 @@ window.resetPass = async function(){
   }catch(e){alert(e.message);}
 };
 
-window.logout = function(){ signOut(auth); };
+window.logout = ()=> signOut(auth);
 
+// Suggest users
+window.suggestUsers = async ()=>{
+  const term = document.getElementById("searchBox").value.toLowerCase();
+  const list = document.getElementById("suggestions");
+  list.innerHTML="";
+  if(term==="") return;
+  const q = query(collection(db,"users"),orderBy("name"));
+  const snapshot = await getDocs(q);
+  snapshot.forEach(docSnap=>{
+    const u = docSnap.data();
+    if(u.name && u.name.toLowerCase().includes(term) && u.uid !== currentUser.uid){
+      const div=document.createElement("div");
+      div.className="suggestionItem";
+      div.textContent=u.name;
+      div.onclick=()=>openChat(u);
+      list.appendChild(div);
+    }
+  });
+};
+
+// Handle enter press
+function handleEnter(e){
+  if(e.key==="Enter") suggestUsers();
+}
+
+// ✅ Updated: Load only conversations with messages
 async function loadConversations(){
-  const chatList=document.getElementById("chatList");
-  chatList.innerHTML="<b>Loading chats...</b>";
+  const convList = document.getElementById("conversationList");
+  convList.innerHTML="<b>Loading conversations...</b>";
 
-  const chatsRef=collection(db,"chats");
-  const snapshot=await getDocs(chatsRef);
-  const chatData=[];
+  const chatsRef = collection(db,"chats");
+  const snapshot = await getDocs(chatsRef);
+  convList.innerHTML="";
+
+  const seenUsers = new Set();
 
   snapshot.forEach(docSnap=>{
-    const chatId=docSnap.id;
+    const chatId = docSnap.id;
     if(chatId.includes(currentUser.uid)){
-      const msgRef=collection(db,"chats",chatId,"messages");
-      const q=query(msgRef,orderBy("timestamp","desc"));
-      onSnapshot(q,(snap)=>{
-        if(!snap.empty){
-          const lastMsg=snap.docs[0].data();
-          const otherId=chatId.replace(currentUser.uid,"").replace("_","");
-          chatData.push({chatId,lastMsg,otherId});
-          renderChats(chatData);
-        }
-      });
+      const otherId = chatId.replace(currentUser.uid,"").replace("_","");
+      if(!seenUsers.has(otherId)){
+        seenUsers.add(otherId);
+        getDocs(query(collection(db,"users"),where("uid","==",otherId)))
+          .then(userSnap=>{
+            userSnap.forEach(uDoc=>{
+              const u = uDoc.data();
+              const div=document.createElement("div");
+              div.className="conversationItem";
+              div.textContent=u.name;
+              div.onclick=()=>openChat(u);
+              convList.appendChild(div);
+            });
+          });
+      }
     }
   });
 }
 
-async function renderChats(chatData){
-  const chatList=document.getElementById("chatList");
-  chatList.innerHTML="";
-  for(let c of chatData){
-    const userDoc=await getDocs(query(collection(db,"users"),where("uid","==",c.otherId)));
-    userDoc.forEach(d=>{
-      const u=d.data();
-      const div=document.createElement("div");
-      div.className="user";
-      div.innerHTML=`<b>${u.name}</b><span>${c.lastMsg.message||""}</span>`;
-      div.onclick=()=>openChat(u);
-      chatList.appendChild(div);
-    });
-  }
-}
-
-window.searchUsers = async function(){
-  const term=document.getElementById("searchBox").value.toLowerCase();
-  const searchDiv=document.getElementById("searchResults");
-  searchDiv.innerHTML="";
-
-  if(!term)return;
-
-  const q=query(collection(db,"users"));
-  const snapshot=await getDocs(q);
-  snapshot.forEach(docSnap=>{
-    const u=docSnap.data();
-    if(u.uid!==currentUser.uid && u.name.toLowerCase().includes(term)){
-      const div=document.createElement("div");
-      div.className="user";
-      div.innerHTML=`<b>${u.name}</b>`;
-      div.onclick=()=>openChat(u);
-      searchDiv.appendChild(div);
-    }
-  });
-};
-
-window.openChat=function(u){
+// Open chat
+async function openChat(u){
   selectedUser=u;
-  showPage("chatPage");
-  document.getElementById("chatWith").textContent=u.name;
-  loadMessages(u);
-};
-
-function loadMessages(u){
-  const area=document.getElementById("chatArea");
-  const chatId=currentUser.uid<u.uid?currentUser.uid+"_"+u.uid:u.uid+"_"+currentUser.uid;
+  showPage('chatPage');
+  document.getElementById("chatWith").textContent="Chat with "+u.name;
+  const chatId = currentUser.uid < u.uid ? currentUser.uid+"_"+u.uid : u.uid+"_"+currentUser.uid;
+  const chatArea=document.getElementById("chatArea");
+  chatArea.innerHTML="";
   const msgRef=collection(db,"chats",chatId,"messages");
   const q=query(msgRef,orderBy("timestamp"));
   onSnapshot(q,(snap)=>{
-    area.innerHTML="";
+    chatArea.innerHTML="";
     snap.forEach(d=>{
       const m=d.data();
       const div=document.createElement("div");
       div.className="message "+(m.senderId===currentUser.uid?"sent":"received");
       div.textContent=m.message;
-      area.appendChild(div);
+      chatArea.appendChild(div);
     });
-    area.scrollTop=area.scrollHeight;
+    chatArea.scrollTop=chatArea.scrollHeight;
   });
 }
 
-window.sendMessage = async function(){
+// Send message
+window.sendMessage=async()=>{
   const input=document.getElementById("messageInput");
-  if(!selectedUser||!input.value.trim())return;
+  if(!selectedUser||!input.value.trim()) return;
   const chatId=currentUser.uid<selectedUser.uid?currentUser.uid+"_"+selectedUser.uid:selectedUser.uid+"_"+currentUser.uid;
   await addDoc(collection(db,"chats",chatId,"messages"),{
     senderId:currentUser.uid,
@@ -237,19 +231,12 @@ window.sendMessage = async function(){
     timestamp:serverTimestamp()
   });
   input.value="";
-  document.getElementById("typingPreview").textContent = "";
 };
 
-document.addEventListener("DOMContentLoaded", function(){
-  const messageInput = document.getElementById("messageInput");
-  const typingPreview = document.getElementById("typingPreview");
-
-  messageInput.addEventListener("input", function(){
-    typingPreview.textContent = "Typing: " + messageInput.value;
-  });
-
-  document.getElementById("sendBtn").addEventListener("click", sendMessage);
-});
+// Back to main
+function backToMain(){
+  showPage('mainPage');
+}
 </script>
 </body>
 </html>
